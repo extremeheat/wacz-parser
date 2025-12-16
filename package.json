@@ -1,7 +1,7 @@
 {
   "name": "wacz-parser",
   "version": "1.0.0",
-  "description": "A template repository to make it easy to create new prismarine repo",
+  "description": "A Node.js parser for WACZ web archive bundles",
   "main": "src/index.js",
   "scripts": {
     "test": "mocha --reporter spec --exit",
@@ -20,6 +20,9 @@
     "url": "https://github.com/extremeheat/wacz-parser/issues"
   },
   "homepage": "https://github.com/extremeheat/wacz-parser#readme",
+  "dependencies": {
+    "yauzl": "^2.10.0"
+  },
   "devDependencies": {
     "wacz-parser": "file:.",
     "standard": "^17.0.0",
