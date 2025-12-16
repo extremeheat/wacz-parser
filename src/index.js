@@ -93,12 +93,12 @@ class Archive {
     const captures = await this._loadCdxIndex()
     const matcher = buildUrlMatcher(urlOrPattern)
     const filtered = captures.filter(cap => matcher(cap.url))
-    return filterCapturesByOptions(filtered, opts)
+    return filterCapturesByOptions(filtered, opts).map(info => decorateCapture(info, this))
   }
 
   async getCapture (url, opts) {
     if (!opts || !opts.at) throw new Error('getCapture requires { at } option')
-    const captures = await this.findCaptures(url, { from: null, to: null })
+    const captures = await this.findCaptures(url)
     if (!captures.length) return null
     const targetTs = normalizeDate(opts.at)
     const strategy = opts.strategy || 'closest'
@@ -179,8 +179,12 @@ class Archive {
     const records = parseWarc(buffer)
     const byKey = new Map()
     for (const rec of records) {
+      const type = (rec.headers['WARC-Type'] || '').toLowerCase()
       const key = `${rec.headers['WARC-Target-URI'] || ''}|${rec.headers['WARC-Date'] || ''}`
-      byKey.set(key, rec)
+      const existing = byKey.get(key)
+      if (!existing || type === 'response' || (existing.headers['WARC-Type'] || '').toLowerCase() !== 'response') {
+        byKey.set(key, rec)
+      }
     }
     const data = { records, byKey }
     this._warcCache.set(warcPath, data)
@@ -266,12 +270,15 @@ function openZip (filePath) {
   })
 }
 
-async function streamToBuffer (stream) {
-  const chunks = []
-  for await (const chunk of stream) {
-    chunks.push(chunk)
-  }
-  return Buffer.concat(chunks)
+function streamToBuffer (stream) {
+  return new Promise((resolve, reject) => {
+    const chunks = []
+    stream.on('data', chunk => chunks.push(Buffer.from(chunk)))
+    stream.once('end', () => resolve(Buffer.concat(chunks)))
+    stream.once('error', reject)
+    // ensure flow mode
+    stream.resume()
+  })
 }
 
 function buildUrlMatcher (urlOrPattern) {
@@ -404,6 +411,17 @@ function parseHttpResponse (payload) {
   }
   const body = payload.slice(delimiter + 4)
   return { status, headers, body }
+}
+
+function decorateCapture (info, archive) {
+  if (!info) return info
+  return {
+    ...info,
+    async openResponse () {
+      const cap = await archive.openCapture(info)
+      return cap.openResponse()
+    }
+  }
 }
 
 module.exports = {
