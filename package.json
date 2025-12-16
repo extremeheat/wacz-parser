@@ -1,5 +1,5 @@
 {
-  "name": "prismarine-template",
+  "name": "wacz-parser",
   "version": "1.0.0",
   "description": "A template repository to make it easy to create new prismarine repo",
   "main": "src/index.js",
@@ -11,17 +11,17 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/extremeheat/prismarine-template.git"
+    "url": "git+https://github.com/extremeheat/wacz-parser.git"
   },
   "keywords": [],
   "author": "extremeheat",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/extremeheat/prismarine-template/issues"
+    "url": "https://github.com/extremeheat/wacz-parser/issues"
   },
-  "homepage": "https://github.com/extremeheat/prismarine-template#readme",
+  "homepage": "https://github.com/extremeheat/wacz-parser#readme",
   "devDependencies": {
-    "prismarine-template": "file:.",
+    "wacz-parser": "file:.",
     "standard": "^17.0.0",
     "mocha": "^11.1.0"
   }

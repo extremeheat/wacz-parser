@@ -1,5 +1,5 @@
 /* eslint-env mocha */
-const lib = require('prismarine-template')
+const lib = require('wacz-parser')
 
 describe('basic', () => {
   it('test', () => {
