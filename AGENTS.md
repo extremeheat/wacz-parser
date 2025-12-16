@@ -1,0 +1,1 @@
+This is a Node.js WACZ parser library. Proposed api in docs/proposed-api.md.
