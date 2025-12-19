@@ -84,6 +84,17 @@ class Archive {
     return file.text(encoding)
   }
 
+  async _getTextMaybeGzip (filePath, encoding = 'utf8') {
+    const entry = this._fileMap.get(filePath)
+    if (!entry) throw new Error(`File not found in archive: ${filePath}`)
+    let stream = await this._openEntryStream(entry)
+    if (filePath.endsWith('.gz')) {
+      stream = stream.pipe(createGunzip())
+    }
+    const buf = await streamToBuffer(stream)
+    return buf.toString(encoding)
+  }
+
   async getJSON (filePath, encoding = 'utf8') {
     const file = await this.getFile(filePath)
     return file.json(encoding)
@@ -149,9 +160,18 @@ class Archive {
     if (this._cdxIndex) return this._cdxIndex
     const preferIndex = this.options.preferIndex || 'cdxj'
     const candidatePaths = []
-    if (preferIndex === 'cdx') candidatePaths.push('indexes/index.cdx')
-    else if (preferIndex === 'cdxj') candidatePaths.push('indexes/index.cdxj', 'indexes/index.cdx')
-    else candidatePaths.push('indexes/index.cdx')
+    if (preferIndex === 'cdx') {
+      candidatePaths.push('indexes/index.cdx.gz', 'indexes/index.cdx')
+    } else if (preferIndex === 'cdxj') {
+      candidatePaths.push(
+        'indexes/index.cdxj.gz',
+        'indexes/index.cdxj',
+        'indexes/index.cdx.gz',
+        'indexes/index.cdx'
+      )
+    } else {
+      candidatePaths.push('indexes/index.cdx.gz', 'indexes/index.cdx')
+    }
 
     let indexEntry = null
     for (const p of candidatePaths) {
@@ -161,7 +181,7 @@ class Archive {
       }
     }
     if (!indexEntry) throw new Error('No index file found in archive')
-    const text = await this.getText(indexEntry)
+    const text = await this._getTextMaybeGzip(indexEntry)
     const captures = parseCdx(text)
     this._cdxIndex = captures
     return captures
